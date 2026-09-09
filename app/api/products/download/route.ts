@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import ExcelJS from 'exceljs';
 import { db } from '@/lib/db/store';
-import * as XLSX from 'xlsx';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -16,8 +16,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Valid paid order required for download' }, { status: 403 });
   }
 
-  // Generate an authentic comprehensive multi-tab Excel template bundle
-  const wb = XLSX.utils.book_new();
+  // Generate an authentic comprehensive multi-tab Excel template bundle.
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Toolbox.Events';
+  wb.created = new Date();
 
   // Tab 1: Welcome & Setup
   const welcomeData = [
@@ -36,7 +38,12 @@ export async function GET(req: NextRequest) {
     ['SUPPORT & QUESTIONS:'],
     ['Email: support@toolbox.events | Web: https://toolbox.events'],
   ];
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(welcomeData), 'License & Instructions');
+  const welcomeSheet = wb.addWorksheet('License & Instructions');
+  welcomeData.forEach((row) => welcomeSheet.addRow(row));
+  welcomeSheet.getColumn(1).width = 95;
+  welcomeSheet.getRow(1).font = { bold: true, size: 16 };
+  welcomeSheet.getRow(7).font = { bold: true };
+  welcomeSheet.getRow(13).font = { bold: true };
 
   // Tab 2: Master Settings
   const settingsData = [
@@ -50,7 +57,13 @@ export async function GET(req: NextRequest) {
     ['Total Target Budget', 50000, 50000],
     ['Contingency Reserve %', '10%', '10%'],
   ];
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(settingsData), 'Master Settings');
+  const settingsSheet = wb.addWorksheet('Master Settings');
+  settingsData.forEach((row) => settingsSheet.addRow(row));
+  settingsSheet.getColumn(1).width = 28;
+  settingsSheet.getColumn(2).width = 38;
+  settingsSheet.getColumn(3).width = 30;
+  settingsSheet.getRow(1).font = { bold: true, size: 16 };
+  settingsSheet.getRow(2).font = { bold: true };
 
   // Tab 3: Detailed Budget & Expenses
   const budgetData = [
@@ -67,7 +80,24 @@ export async function GET(req: NextRequest) {
     ['Contingency', 'Emergency Overtime Reserve', 5000, 0, 5000, 'Internal Reserve', 'Reserved'],
     ['TOTALS', '', 54000, 48000, 6000, '', ''],
   ];
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(budgetData), 'Budget & Expenses');
+  const budgetSheet = wb.addWorksheet('Budget & Expenses');
+  budgetData.forEach((row) => budgetSheet.addRow(row));
+  budgetSheet.getColumn(1).width = 22;
+  budgetSheet.getColumn(2).width = 42;
+  budgetSheet.getColumn(3).width = 18;
+  budgetSheet.getColumn(4).width = 16;
+  budgetSheet.getColumn(5).width = 14;
+  budgetSheet.getColumn(6).width = 28;
+  budgetSheet.getColumn(7).width = 20;
+  budgetSheet.getRow(1).font = { bold: true, size: 16 };
+  budgetSheet.getRow(2).font = { bold: true };
+  budgetSheet.getRow(budgetData.length).font = { bold: true };
+  budgetSheet.getRows(3, budgetData.length - 2)?.forEach((row) => {
+    row.getCell(5).value = {
+      formula: `C${row.number}-D${row.number}`,
+      result: row.getCell(5).value as number,
+    };
+  });
 
   // Tab 4: Minute-by-Minute Run of Show
   const runOfShowData = [
@@ -86,9 +116,15 @@ export async function GET(req: NextRequest) {
     ['06:30 PM', '30 min', 'Closing Remarks & Wrap-up', 'MC', 'Closing Stinger Cue', 'Main Stage', 'Invite guests to afterparty'],
     ['07:00 PM', '120 min', 'Vendor Breakdown & Load-out', 'Logistics Lead', 'Work Lights', 'All Areas', 'Sign venue handover log'],
   ];
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(runOfShowData), 'Run of Show');
+  const runSheet = wb.addWorksheet('Run of Show');
+  runOfShowData.forEach((row) => runSheet.addRow(row));
+  [14, 14, 38, 22, 28, 24, 42].forEach((width, index) => {
+    runSheet.getColumn(index + 1).width = width;
+  });
+  runSheet.getRow(1).font = { bold: true, size: 16 };
+  runSheet.getRow(2).font = { bold: true };
 
-  const fileBuffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  const fileBuffer = await wb.xlsx.writeBuffer();
 
   return new NextResponse(fileBuffer, {
     status: 200,
