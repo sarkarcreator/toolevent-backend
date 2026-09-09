@@ -38,9 +38,26 @@ model User {
   @@index([role])
 }
 
-enum Role { USER ADMIN }
-enum OrderStatus { PENDING PROCESSING PAID FAILED REFUNDED CANCELLED }
-enum SubscriptionTier { FREE REGISTERED PRO ENTERPRISE }
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum SubscriptionTier {
+  FREE
+  REGISTERED
+  PRO
+  ENTERPRISE
+}
 
 model RefreshToken {
   id String @id @default(uuid())
