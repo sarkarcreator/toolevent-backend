@@ -16,12 +16,14 @@
     "exceljs": "^4.4.0",
     "jsonwebtoken": "^9.0.3",
     "next": "^15.4.9",
+    "nodemailer": "^7.0.6",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^3.0.0",
+    "@types/bcryptjs": "^3.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
+    "@types/nodemailer": "^7.0.1",
     "@types/react": "19.2.18",
     "eslint": "9.39.1",
     "eslint-config-next": "16.0.8",
