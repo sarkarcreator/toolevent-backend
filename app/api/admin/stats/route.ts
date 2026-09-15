@@ -12,19 +12,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const [
-      totalUsers,
-      totalCalculations,
-      totalPlans,
-      totalOrders,
-      totalRevenue,
-      totalAffiliateClicks,
-      totalAIUsage,
-      totalBlogPosts,
-      totalContactMessages,
-      toolRows,
-      marketRows,
-    ] = await Promise.all([
+    const [totalUsers, totalCalculations, totalPlans, totalOrders, totalRevenue, totalAffiliateClicks, totalAIUsage, totalBlogPosts, totalContactMessages, toolRows, marketRows] = await Promise.all([
       db.users.count(),
       db.calculations.count(),
       db.savedPlans.count(),
@@ -34,31 +22,24 @@ export async function GET(req: NextRequest) {
       db.aiUsage.count(),
       db.blog.count(),
       db.contact.count(),
-      prisma.calculation.groupBy({
-        by: ['toolType'],
-        _count: { _all: true },
-        orderBy: { _count: { toolType: 'desc' } },
-        take: 6,
-      }),
-      prisma.user.groupBy({
-        by: ['countryPreference'],
-        _count: { _all: true },
-        orderBy: { _count: { countryPreference: 'desc' } },
-      }),
+      prisma.calculation.groupBy({ by: ['toolType'], _count: { _all: true } }),
+      prisma.user.groupBy({ by: ['countryPreference'], _count: { _all: true } }),
     ]);
 
+    const topTools = [...toolRows]
+      .sort((a, b) => b._count._all - a._count._all)
+      .slice(0, 6)
+      .map((row) => ({ name: row.toolType, count: row._count._all, category: row.toolType }));
+
     const totalMarketUsers = marketRows.reduce((sum, row) => sum + row._count._all, 0);
-    const topTools = toolRows.map((row) => ({
-      name: row.toolType,
-      count: row._count._all,
-      category: row.toolType,
-    }));
-    const marketDistribution = marketRows.map((row) => ({
-      market: row.countryPreference,
-      percentage: totalMarketUsers ? Math.round((row._count._all / totalMarketUsers) * 100) : 0,
-      count: row._count._all,
-      currency: row.countryPreference === 'UAE' ? 'AED' : row.countryPreference === 'UK' ? 'GBP' : 'USD',
-    }));
+    const marketDistribution = [...marketRows]
+      .sort((a, b) => b._count._all - a._count._all)
+      .map((row) => ({
+        market: row.countryPreference,
+        percentage: totalMarketUsers ? Math.round((row._count._all / totalMarketUsers) * 100) : 0,
+        count: row._count._all,
+        currency: row.countryPreference === 'UAE' ? 'AED' : row.countryPreference === 'UK' ? 'GBP' : 'USD',
+      }));
 
     return NextResponse.json({
       success: true,
