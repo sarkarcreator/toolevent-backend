@@ -85,6 +85,19 @@ export function verifyStripeWebhookSignature(payload: string, signatureHeader: s
   });
 }
 
+function createDownloadToken(orderId: string) {
+  return crypto.createHmac('sha256', getStripeSecretKey()).update(`download:${orderId}`).digest('hex');
+}
+
+export function verifyDownloadToken(orderId: string, token: string) {
+  const expected = createDownloadToken(orderId);
+  try {
+    return crypto.timingSafeEqual(Buffer.from(token, 'utf8'), Buffer.from(expected, 'utf8'));
+  } catch {
+    return false;
+  }
+}
+
 export async function fulfillCheckoutSession(session: StripeSession) {
   const orderId = session.metadata?.orderId || session.client_reference_id;
   if (!orderId) throw new Error('Stripe session is missing the Toolbox.Events order ID');
@@ -114,6 +127,19 @@ export async function fulfillCheckoutSession(session: StripeSession) {
     await prisma.payment.create({ data: { orderId: order.id, amount: order.totalAmount, currency: order.currency, provider: 'STRIPE', providerPaymentId: session.id, status: 'PAID' } });
   }
   return { orderId: order.id, status: 'PAID', paid: true };
+}
+
+export async function getVerifiedDownload(orderId: string) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { items: { include: { product: true } } },
+  });
+  if (!order || order.status !== 'PAID' || order.items.length === 0) return null;
+  return {
+    orderId: order.id,
+    productId: order.items[0].productId,
+    downloadUrl: `/api/products/download?orderId=${encodeURIComponent(order.id)}&token=${createDownloadToken(order.id)}`,
+  };
 }
 
 export async function markCheckoutFailed(sessionId: string, message: string, status: 'FAILED' | 'CANCELLED' = 'FAILED') {
