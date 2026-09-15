@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/*': [
       './node_modules/mariadb/**/*',
+      './node_modules/iconv-lite/**/*',
     ],
   },
 };

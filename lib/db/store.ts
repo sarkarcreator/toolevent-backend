@@ -39,18 +39,182 @@ const BLOGS=[
 {id:'blog_04',slug:'how-to-calculate-event-roi',title:'How to Calculate Event ROI & Prove Business Value to Executives',excerpt:'Turn fuzzy event metrics into hard revenue, pipeline attribution, and cost-per-lead statistics that your CFO will love.',content:'Executives no longer greenlight corporate events for vanity. Every investment must show clear return on investment.\n\n### The Simple ROI Formula\nCompare net return against total investment to quantify event ROI.\n\n### Measuring Indirect Pipeline\nInclude sourced and accelerated pipeline value after the event.',category:'Analytics',author:'David Chen, Event Finance Director',readTime:'6 min read',tags:['ROI','Corporate','Analytics','B2B']}
 ];
 
-let seedPromise:Promise<void>|undefined;
-async function ensureSeeded(){
- if(seedPromise)return seedPromise;
- seedPromise=(async()=>{
-  const email=process.env.ADMIN_EMAIL||'admin@toolbox.events'; const password=process.env.ADMIN_PASSWORD||'Admin123!';
-  if(!await prisma.user.findUnique({where:{email}})) await prisma.user.create({data:{id:'usr_admin_01',email,passwordHash:await bcrypt.hash(password,10),name:'System Admin',role:'ADMIN',subscriptionTier:'PRO',countryPreference:'USA',currencyPreference:'USD',emailVerified:true}});
-  for(const p of PRODUCTS) await prisma.product.upsert({where:{slug:p.slug},update:{name:p.name,category:p.category,description:p.description,features:p.features as any,priceUSD:p.priceUSD,priceAED:p.priceAED,priceGBP:p.priceGBP,badge:p.badge,fileDownloadKey:p.fileDownloadKey,isActive:p.isActive},create:{id:p.id,slug:p.slug,name:p.name,category:p.category,description:p.description,features:p.features as any,priceUSD:p.priceUSD,priceAED:p.priceAED,priceGBP:p.priceGBP,badge:p.badge,fileDownloadKey:p.fileDownloadKey,isActive:p.isActive}});
-  for(const a of AFFILIATES) await prisma.affiliate.upsert({where:{slug:a.slug},update:{name:a.name,company:a.company,category:a.category,targetUrl:a.targetUrl,description:a.description,commission:a.commission,country:a.country,isActive:true},create:{id:a.id,slug:a.slug,name:a.name,company:a.company,category:a.category,targetUrl:a.targetUrl,description:a.description,commission:a.commission,country:a.country,isActive:true,clicksCount:a.clicksCount}});
-  for(const b of BLOGS) await prisma.blogPost.upsert({where:{slug:b.slug},update:{title:b.title,excerpt:b.excerpt,content:b.content,category:b.category,author:b.author,readTime:b.readTime,tags:b.tags as any,isPublished:true},create:{id:b.id,slug:b.slug,title:b.title,excerpt:b.excerpt,content:b.content,category:b.category,author:b.author,readTime:b.readTime,tags:b.tags as any,isPublished:true}});
-  const settings={heroHeadline:'Plan Your Event With Confidence',heroSubheading:'Free calculators, AI planning tools, budgets, profit calculators and professional event templates for the USA, UAE and UK.',aiFreeTierMonthlyLimit:3,aiRegisteredMonthlyLimit:15,aiProMonthlyLimit:100,allowRegistration:true};
-  for(const [key,value] of Object.entries(settings)) await prisma.siteSetting.upsert({where:{key},update:{value:value as any},create:{key,value:value as any}});
- })().catch(e=>{seedPromise=undefined;throw e}); return seedPromise;
+let seedPromise: Promise<void> | undefined;
+
+async function seedDatabase() {
+  const email = process.env.ADMIN_EMAIL || 'admin@toolbox.events';
+  const password = process.env.ADMIN_PASSWORD || 'Admin123!';
+
+  if (
+    !(await prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
+    }))
+  ) {
+    await prisma.user.create({
+      data: {
+        id: 'usr_admin_01',
+        email,
+        passwordHash: await bcrypt.hash(password, 10),
+        name: 'System Admin',
+        role: 'ADMIN',
+        subscriptionTier: 'PRO',
+        countryPreference: 'USA',
+        currencyPreference: 'USD',
+        emailVerified: true,
+      },
+    });
+  }
+
+  for (const p of PRODUCTS) {
+    await prisma.product.upsert({
+      where: { slug: p.slug },
+      update: {
+        name: p.name,
+        category: p.category,
+        description: p.description,
+        features: p.features as any,
+        priceUSD: p.priceUSD,
+        priceAED: p.priceAED,
+        priceGBP: p.priceGBP,
+        badge: p.badge,
+        fileDownloadKey: p.fileDownloadKey,
+        isActive: p.isActive,
+      },
+      create: {
+        id: p.id,
+        slug: p.slug,
+        name: p.name,
+        category: p.category,
+        description: p.description,
+        features: p.features as any,
+        priceUSD: p.priceUSD,
+        priceAED: p.priceAED,
+        priceGBP: p.priceGBP,
+        badge: p.badge,
+        fileDownloadKey: p.fileDownloadKey,
+        isActive: p.isActive,
+      },
+    });
+  }
+
+  for (const a of AFFILIATES) {
+    await prisma.affiliate.upsert({
+      where: { slug: a.slug },
+      update: {
+        name: a.name,
+        company: a.company,
+        category: a.category,
+        targetUrl: a.targetUrl,
+        description: a.description,
+        commission: a.commission,
+        country: a.country,
+        isActive: true,
+      },
+      create: {
+        id: a.id,
+        slug: a.slug,
+        name: a.name,
+        company: a.company,
+        category: a.category,
+        targetUrl: a.targetUrl,
+        description: a.description,
+        commission: a.commission,
+        country: a.country,
+        isActive: true,
+        clicksCount: a.clicksCount,
+      },
+    });
+  }
+
+  for (const b of BLOGS) {
+    await prisma.blogPost.upsert({
+      where: { slug: b.slug },
+      update: {
+        title: b.title,
+        excerpt: b.excerpt,
+        content: b.content,
+        category: b.category,
+        author: b.author,
+        readTime: b.readTime,
+        tags: b.tags as any,
+        isPublished: true,
+      },
+      create: {
+        id: b.id,
+        slug: b.slug,
+        title: b.title,
+        excerpt: b.excerpt,
+        content: b.content,
+        category: b.category,
+        author: b.author,
+        readTime: b.readTime,
+        tags: b.tags as any,
+        isPublished: true,
+      },
+    });
+  }
+
+  const settings = {
+    heroHeadline: 'Plan Your Event With Confidence',
+    heroSubheading:
+      'Free calculators, AI planning tools, budgets, profit calculators and professional event templates for the USA, UAE and UK.',
+    aiFreeTierMonthlyLimit: 3,
+    aiRegisteredMonthlyLimit: 15,
+    aiProMonthlyLimit: 100,
+    allowRegistration: true,
+  };
+
+  for (const [key, value] of Object.entries(settings)) {
+    await prisma.siteSetting.upsert({
+      where: { key },
+      update: { value: value as any },
+      create: { key, value: value as any },
+    });
+  }
+}
+
+async function ensureSeeded() {
+  if (seedPromise) return seedPromise;
+
+  seedPromise = (async () => {
+    const email = process.env.ADMIN_EMAIL || 'admin@toolbox.events';
+
+    const [
+      admin,
+      productCount,
+      affiliateCount,
+      blogCount,
+      settings,
+    ] = await Promise.all([
+      prisma.user.findUnique({
+        where: { email },
+        select: { id: true },
+      }),
+      prisma.product.count(),
+      prisma.affiliate.count(),
+      prisma.blogPost.count(),
+      prisma.siteSetting.count(),
+    ]);
+
+    const seedComplete =
+      !!admin &&
+      productCount >= PRODUCTS.length &&
+      affiliateCount >= AFFILIATES.length &&
+      blogCount >= BLOGS.length &&
+      settings >= 5;
+
+    if (seedComplete) {
+      return;
+    }
+
+    await seedDatabase();
+  })().catch((error) => {
+    seedPromise = undefined;
+    throw error;
+  });
+
+  return seedPromise;
 }
 
 export const db={

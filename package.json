@@ -19,6 +19,7 @@
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.2",
     "exceljs": "^4.4.0",
+    "iconv-lite": "^0.7.3",
     "jsonwebtoken": "^9.0.3",
     "mariadb": "^3.4.5",
     "next": "^15.4.9",
