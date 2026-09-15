@@ -14,15 +14,15 @@ type WorkbookContext = {
   currency: string;
 };
 
-function title(ws: ExcelJS.Worksheet, text: string, width = 80) {
+function title(ws: ExcelJS.Worksheet, text: string) {
   ws.addRow([text]);
-  ws.mergeCells(1, 1, 1, Math.max(2, Math.min(width, 10)));
+  ws.mergeCells(1, 1, 1, 8);
   ws.getCell(1, 1).font = { bold: true, size: 16 };
   ws.getCell(1, 1).alignment = { vertical: 'middle' };
   ws.getRow(1).height = 28;
 }
 
-function header(ws: ExcelJS.Worksheet, row: number, values: string[]) {
+function header(ws: ExcelJS.Worksheet, values: string[]) {
   const r = ws.addRow(values);
   r.font = { bold: true };
   r.alignment = { vertical: 'middle', wrapText: true };
@@ -58,7 +58,7 @@ function addLicenseSheet(ctx: WorkbookContext) {
 function addBudgetTemplate(ctx: WorkbookContext) {
   const ws = ctx.workbook.addWorksheet('Budget & Expenses');
   title(ws, 'EVENT BUDGET & EXPENSES');
-  header(ws, 2, ['Category', 'Item / Expense', 'Budget', 'Actual', 'Variance', 'Vendor', 'Payment Status', 'Notes']);
+  header(ws, ['Category', 'Item / Expense', 'Budget', 'Actual', 'Variance', 'Vendor', 'Payment Status', 'Notes']);
   const categories = ['Venue', 'Catering', 'Production & AV', 'Decor & Florals', 'Marketing', 'Staffing', 'Transportation', 'Accommodation', 'Insurance & Permits', 'Technology', 'Other'];
   for (let i = 0; i < 55; i += 1) {
     const row = ws.addRow([categories[i % categories.length], '', '', '', '', '', '', '']);
@@ -89,7 +89,7 @@ function addWeddingTemplate(ctx: WorkbookContext) {
   ws.addRow(['Guest Count', '']);
   ws.addRow(['Currency', ctx.currency]);
   ws.addRow([]);
-  header(ws, 6, ['Category', 'Expense', 'Budget', 'Actual', 'Variance', 'Due Date', 'Vendor / Contact', 'Payment Status']);
+  header(ws, ['Category', 'Expense', 'Budget', 'Actual', 'Variance', 'Due Date', 'Vendor / Contact', 'Payment Status']);
   const categories = ['Venue', 'Catering', 'Decor', 'Photography & Video', 'Attire', 'Beauty', 'Entertainment', 'Invitations & Stationery', 'Transportation', 'Accommodation', 'Ceremony', 'Reception', 'Flowers', 'Cake & Desserts', 'Favors', 'Planner / Coordinator', 'Other'];
   for (let i = 0; i < 90; i += 1) {
     const row = ws.addRow([categories[i % categories.length], '', '', '', '', '', '', '']);
@@ -114,15 +114,15 @@ function addCorporateTemplate(ctx: WorkbookContext) {
   ws.addRow(['Target Attendance', '']);
   ws.addRow(['Budget', '']);
   ws.addRow([]);
-  header(ws, 7, ['Stakeholder', 'Role', 'Decision / Deliverable', 'Owner', 'Due Date', 'Status', 'Notes']);
+  header(ws, ['Stakeholder', 'Role', 'Decision / Deliverable', 'Owner', 'Due Date', 'Status', 'Notes']);
   blankRows(ws, 35, 7);
   const rfp = ctx.workbook.addWorksheet('Vendor RFP Matrix');
   title(rfp, 'VENDOR RFP COMPARISON');
-  header(rfp, 2, ['Vendor', 'Category', 'Quoted Cost', 'Score', 'Scope Fit', 'Availability', 'Notes']);
+  header(rfp, ['Vendor', 'Category', 'Quoted Cost', 'Score', 'Scope Fit', 'Availability', 'Notes']);
   blankRows(rfp, 25, 7);
   const sponsor = ctx.workbook.addWorksheet('Sponsorship Calculator');
   title(sponsor, 'SPONSORSHIP & REVENUE');
-  header(sponsor, 2, ['Tier', 'Price', 'Quantity', 'Gross Revenue', 'Notes']);
+  header(sponsor, ['Tier', 'Price', 'Quantity', 'Gross Revenue', 'Notes']);
   for (let i = 0; i < 12; i += 1) {
     const row = sponsor.addRow(['', '', '', '', '']);
     const n = row.number;
@@ -136,15 +136,15 @@ function addCorporateTemplate(ctx: WorkbookContext) {
 function addConferenceTemplate(ctx: WorkbookContext) {
   const agenda = ctx.workbook.addWorksheet('Conference Agenda');
   title(agenda, 'CONFERENCE AGENDA & STAGE FLOW');
-  header(agenda, 2, ['Date', 'Start', 'End', 'Track / Stage', 'Session', 'Speaker', 'Room', 'AV Cue', 'Notes']);
+  header(agenda, ['Date', 'Start', 'End', 'Track / Stage', 'Session', 'Speaker', 'Room', 'AV Cue', 'Notes']);
   blankRows(agenda, 100, 9);
   const speakers = ctx.workbook.addWorksheet('Speakers');
   title(speakers, 'SPEAKER MANAGEMENT');
-  header(speakers, 2, ['Speaker', 'Organization', 'Topic', 'Contact', 'Session', 'Travel / Hotel', 'AV Requirements', 'Status']);
+  header(speakers, ['Speaker', 'Organization', 'Topic', 'Contact', 'Session', 'Travel / Hotel', 'AV Requirements', 'Status']);
   blankRows(speakers, 50, 8);
   const sponsors = ctx.workbook.addWorksheet('Sponsors');
   title(sponsors, 'SPONSOR & EXHIBITOR TRACKER');
-  header(sponsors, 2, ['Company', 'Tier', 'Fee', 'Booth / Space', 'Deliverables', 'Contact', 'Payment Status', 'Notes']);
+  header(sponsors, ['Company', 'Tier', 'Fee', 'Booth / Space', 'Deliverables', 'Contact', 'Payment Status', 'Notes']);
   blankRows(sponsors, 50, 8);
 }
 
@@ -153,7 +153,7 @@ function addProfitTemplate(ctx: WorkbookContext) {
   title(ws, 'EVENT PROFIT & TICKET YIELD PLANNER');
   ws.addRow(['Currency', ctx.currency]);
   ws.addRow([]);
-  header(ws, 3, ['Ticket Tier', 'Price', 'Expected Tickets', 'Gross Sales', 'Processor / Platform Fee', 'Net Sales', 'Notes']);
+  header(ws, ['Ticket Tier', 'Price', 'Expected Tickets', 'Gross Sales', 'Processor / Platform Fee', 'Net Sales', 'Notes']);
   for (let i = 0; i < 15; i += 1) {
     const row = ws.addRow(['', '', '', '', '', '', '']);
     const n = row.number;
@@ -161,19 +161,16 @@ function addProfitTemplate(ctx: WorkbookContext) {
     row.getCell(6).value = { formula: `IF(D${n}<>"",D${n}-N(E${n}),"")` };
   }
   ws.addRow(['TOTAL', '', '', { formula: 'SUM(D4:D18)' }, { formula: 'SUM(E4:E18)' }, { formula: 'SUM(F4:F18)' }, '']);
-  const summaryStart = 21;
-  ws.getCell(summaryStart, 1).value = 'Financial Summary';
-  ws.getCell(summaryStart, 1).font = { bold: true, size: 13 };
-  ws.getCell(summaryStart + 1, 1).value = 'Fixed Costs';
-  ws.getCell(summaryStart + 1, 2).value = '';
-  ws.getCell(summaryStart + 2, 1).value = 'Variable Costs';
-  ws.getCell(summaryStart + 2, 2).value = '';
-  ws.getCell(summaryStart + 3, 1).value = 'Net Sales';
-  ws.getCell(summaryStart + 3, 2).value = { formula: 'F19' };
-  ws.getCell(summaryStart + 4, 1).value = 'Estimated Profit';
-  ws.getCell(summaryStart + 4, 2).value = { formula: 'B24-B22-B23' };
-  ws.getCell(summaryStart + 5, 1).value = 'Break-even Ticket Count';
-  ws.getCell(summaryStart + 5, 2).value = { formula: 'IFERROR(B22/(AVERAGE(B4:B18)-AVERAGE(E4:E18)-IFERROR(B23/AVERAGE(C4:C18),0)),0)' };
+  ws.getCell(21, 1).value = 'Financial Summary';
+  ws.getCell(21, 1).font = { bold: true, size: 13 };
+  ws.getCell(22, 1).value = 'Fixed Costs';
+  ws.getCell(23, 1).value = 'Variable Costs';
+  ws.getCell(24, 1).value = 'Net Sales';
+  ws.getCell(24, 2).value = { formula: 'F19' };
+  ws.getCell(25, 1).value = 'Estimated Profit';
+  ws.getCell(25, 2).value = { formula: 'B24-B22-B23' };
+  ws.getCell(26, 1).value = 'Break-even Ticket Count';
+  ws.getCell(26, 2).value = { formula: 'IFERROR(B22/(AVERAGE(B4:B18)-AVERAGE(E4:E18)-IFERROR(B23/AVERAGE(C4:C18),0)),0)' };
   [24, 18, 20, 18, 24, 18, 30].forEach((w, i) => { ws.getColumn(i + 1).width = w; });
 }
 
@@ -182,7 +179,7 @@ function addRoiTemplate(ctx: WorkbookContext) {
   title(ws, 'EVENT ROI & VALUE CALCULATOR');
   ws.addRow(['Currency', ctx.currency]);
   ws.addRow([]);
-  header(ws, 3, ['Metric', 'Value', 'Notes']);
+  header(ws, ['Metric', 'Value', 'Notes']);
   const rows = [
     ['Total Event Investment', '', 'Enter total event investment'],
     ['Direct Revenue', '', 'Enter revenue directly attributable to the event'],
@@ -191,13 +188,13 @@ function addRoiTemplate(ctx: WorkbookContext) {
     ['Total Measurable Return', '', 'Calculated'],
     ['Net Return', '', 'Calculated'],
     ['ROI %', '', 'Calculated'],
-    ['Cost per Qualified Lead', '', 'Enter qualified leads below'],
+    ['Cost per Qualified Lead', '', 'Calculated'],
     ['Qualified Leads', '', 'Enter number of qualified leads'],
   ];
   rows.forEach((r) => ws.addRow(r));
-  ws.getCell(8, 2).value = { formula: 'SUM(B5:B8)' };
-  ws.getCell(9, 2).value = { formula: 'B9-B4' };
-  ws.getCell(10, 2).value = { formula: 'IFERROR(B10/B4,0)' };
+  ws.getCell(8, 2).value = { formula: 'SUM(B5:B7)' };
+  ws.getCell(9, 2).value = { formula: 'B8-B4' };
+  ws.getCell(10, 2).value = { formula: 'IFERROR(B9/B4,0)' };
   ws.getCell(11, 2).value = { formula: 'IFERROR(B4/B12,0)' };
   ws.getCell(10, 2).numFmt = '0.00%';
   ws.getColumn(1).width = 34;
@@ -208,7 +205,7 @@ function addRoiTemplate(ctx: WorkbookContext) {
 function addChecklistTemplate(ctx: WorkbookContext) {
   const ws = ctx.workbook.addWorksheet('Master Checklist');
   title(ws, 'EVENT PLANNING MASTER CHECKLIST');
-  header(ws, 2, ['Phase', 'Task', 'Owner', 'Due Date', 'Priority', 'Status', 'Notes']);
+  header(ws, ['Phase', 'Task', 'Owner', 'Due Date', 'Priority', 'Status', 'Notes']);
   const phases = ['Strategy & Scope', 'Budget & Finance', 'Venue & Vendors', 'Marketing & Registration', 'Staffing & Operations', 'Production & AV', 'Guest Experience', 'Event Day', 'Post-Event'];
   const tasks = [
     'Confirm event objective', 'Define target audience', 'Approve working budget', 'Create vendor shortlist', 'Request vendor proposals',
