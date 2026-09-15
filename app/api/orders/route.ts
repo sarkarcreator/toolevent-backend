@@ -9,38 +9,36 @@ const orderSchema = z.object({
   customerEmail: z.string().email(),
   customerName: z.string().optional(),
   currency: z.enum(['USD', 'AED', 'GBP']).default('USD'),
-  paymentMethod: z.enum(['TEST_MODE', 'STRIPE', 'PAYPAL', 'UAE_GATEWAY']).default('TEST_MODE'),
 });
+
+function getPayload(req: NextRequest) {
+  let token = req.cookies.get('auth_token')?.value;
+  if (!token) {
+    const authHeader = req.headers.get('authorization');
+    if (authHeader?.startsWith('Bearer ')) token = authHeader.substring(7);
+  }
+  return token ? verifyToken(token) : null;
+}
 
 export async function GET(req: NextRequest) {
   try {
-    let token = req.cookies.get('auth_token')?.value;
-    if (!token) {
-      const authHeader = req.headers.get('authorization');
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.substring(7);
-      }
-    }
+    const payload = getPayload(req);
 
-    const payload = token ? verifyToken(token) : null;
-    const { searchParams } = new URL(req.url);
-    const email = searchParams.get('email') || undefined;
-
-    let orders;
     if (payload?.role === 'ADMIN') {
-      orders = await db.orders.findMany({});
-    } else if (payload?.userId) {
-      orders = await db.orders.findMany({ where: { userId: payload.userId } });
-    } else if (email) {
-      orders = await db.orders.findMany({ where: { customerEmail: email } });
-    } else {
-      return NextResponse.json({ success: true, data: [] });
+      return NextResponse.json({ success: true, data: await db.orders.findMany({}) });
     }
 
-    return NextResponse.json({ success: true, data: orders });
+    if (payload?.userId) {
+      return NextResponse.json({
+        success: true,
+        data: await db.orders.findMany({ where: { userId: payload.userId } }),
+      });
+    }
+
+    return NextResponse.json({ success: true, data: [] });
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: error?.message } },
+      { success: false, error: { code: 'SERVER_ERROR', message: error?.message || 'Failed to load orders' } },
       { status: 500 }
     );
   }
@@ -48,15 +46,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    let token = req.cookies.get('auth_token')?.value;
-    if (!token) {
-      const authHeader = req.headers.get('authorization');
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.substring(7);
-      }
-    }
-
-    const payload = token ? verifyToken(token) : null;
+    const payload = getPayload(req);
     const body = await req.json();
     const result = orderSchema.safeParse(body);
 
@@ -79,13 +69,9 @@ export async function POST(req: NextRequest) {
       customerName: result.data.customerName,
       currency: result.data.currency,
       productId: result.data.productId,
-      paymentMethod: result.data.paymentMethod,
     });
 
-    return NextResponse.json({
-      success: true,
-      data: checkoutResult,
-    });
+    return NextResponse.json({ success: true, data: checkoutResult });
   } catch (error: any) {
     console.error('Order creation error:', error);
     return NextResponse.json(
@@ -93,7 +79,7 @@ export async function POST(req: NextRequest) {
         success: false,
         error: {
           code: 'CHECKOUT_ERROR',
-          message: error?.message || 'Failed to process order',
+          message: error?.message || 'Failed to create Stripe Checkout Session',
         },
       },
       { status: 500 }
